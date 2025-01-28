@@ -16,33 +16,33 @@
 
 package com.kanyuServer.controller;
 
+import com.kanyuServer.common.Result;
 import com.kanyuServer.entity.User;
+import com.kanyuServer.service.LoginService;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Controller;
-import org.springframework.web.bind.annotation.ModelAttribute;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RequestParam;
-import org.springframework.web.bind.annotation.ResponseBody;
+import org.springframework.web.bind.annotation.*;
+
+import javax.annotation.Resource;
+import javax.servlet.http.HttpSession;
 
 /**
- * @author <a href="mailto:chenxilzx1@gmail.com">theonefx</a>
+ * @author 登录控制器
  */
-@Controller
-public class BasicController {
+@Slf4j
+@RestController
+@RequestMapping("/user")
+public class LoginController {
 
-    // http://127.0.0.1:8080/hello?name=lisi
-    @RequestMapping("/hello")
-    @ResponseBody
-    public String hello(@RequestParam(name = "name", defaultValue = "unknown user") String name) {
-        return "Hello " + name;
-    }
-
-    // http://127.0.0.1:8080/user
-    @RequestMapping("/user")
-    @ResponseBody
-    public User user() {
-        User user = new User();
-
-        return user;
+    @Resource
+    LoginService loginService;
+    @PostMapping("code")
+    public Result sendCode(@RequestParam("phone") String phone, HttpSession session) {
+        // TODO 发送短信验证码并保存验证码
+        //打印日志
+        log.info("前端请求手机"+phone);
+        Result result = loginService.sendCode(phone,session);
+        return result;
     }
 
 
