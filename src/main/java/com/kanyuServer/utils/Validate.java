@@ -22,3 +22,4 @@ public class Validate {
         return !str.matches(regex);
     }
 }
+

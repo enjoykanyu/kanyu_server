@@ -4,6 +4,12 @@ public class ResponseConstant {
     public static final String USER_NOT_FOUND = "用户不存在";
     public static final String PHONE_NOT_FOUND = "手机不存在";
     public static final Integer SUCCESS_CODE = 200;
+    public static final Integer USER_NOT_FOUNT_CODE = 410;
+    public static final String USER_PASSWORD_NOT_CORRECT = "用户密码错误";
+    public static final Integer USER_PASSWORD_NOT_CORRECT_CODE = 415;
+    public static final String CODE_NOT_MATCH = "验证码不匹配";
+    public static final Integer CODE_NOT_MATCH_OCDE = 416;
+
     public static final String SERVER_ERROR = "服务器错误，请稍后重试";
     public static final String LOGIN_USER_KEY = "login:token:";
     public static final Long LOGIN_USER_TTL = 36000L;
