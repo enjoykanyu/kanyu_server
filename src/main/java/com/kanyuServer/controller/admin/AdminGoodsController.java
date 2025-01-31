@@ -19,6 +19,7 @@ package com.kanyuServer.controller.admin;
 import com.kanyuServer.common.Result;
 import com.kanyuServer.dto.LoginForm;
 import com.kanyuServer.entity.Goods;
+import com.kanyuServer.service.AdminGoodsService;
 import com.kanyuServer.service.LoginService;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.ibatis.jdbc.Null;
@@ -38,7 +39,7 @@ public class AdminGoodsController {
 
     //商品所有资源列表
     @Resource
-    LoginService loginService;
+    AdminGoodsService adminGoodsService;
 
     /**
      * 增加商品
@@ -46,9 +47,10 @@ public class AdminGoodsController {
      * @return 商品详情页
      */
     @PostMapping("/goods/insert")
-    public Result insertGoods(Goods goods) {
-        return null;
+    public Result insertGoods(@RequestBody Goods goods) {
+        return adminGoodsService.insertGoods(goods);
     }
+
 
     /**
      * 管理员删除商品
@@ -66,7 +68,7 @@ public class AdminGoodsController {
      * @return 商品详情页
      */
     @PostMapping("goods/{goodsId}")
-    public Result deleteAdminGoods(Goods goods) {
+    public Result deleteAdminGoods(@RequestBody Goods goods) {
         return null;
     }
 
@@ -76,8 +78,11 @@ public class AdminGoodsController {
      * @return 商品详情页
      */
     @PostMapping("goods/update")
-    public Result updateAdminGoods(Goods goods) {
-        return null;
+    public Result updateAdminGoods(@RequestBody Goods goods) {
+        log.info("updateAdminGoods修改"+goods);
+        //写入数据库
+        adminGoodsService.updateGoods(goods);
+        return Result.ok();
     }
 
 }

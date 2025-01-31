@@ -13,7 +13,7 @@ import java.time.LocalDateTime;
 @Data
 @EqualsAndHashCode(callSuper = false)
 @Accessors(chain = true)
-@TableName("good_db")
+@TableName("goods_db")
 public class Goods implements Serializable {
 
     private static final long serialVersionUID = 1L;
@@ -32,10 +32,19 @@ public class Goods implements Serializable {
 
 
     /**
-     * 资源文件
+     * 资源文件url
      */
     private String resource;
 
+    /**
+     * 资源商品文件描述
+     */
+    private String content;
+
+    /**
+     * 资源商品标题
+     */
+    private String title;
 
     /**
      * 下载所需金币数量
@@ -43,7 +52,7 @@ public class Goods implements Serializable {
     private Long price;
 
     /**
-     * 下载量
+     * 下载量销量
      */
     private Integer sold;
 
@@ -60,24 +69,8 @@ public class Goods implements Serializable {
     /**
      * 点赞数量
      */
-    private Integer like;
+    private Integer liked;
 
-
-    /**
-     * 评分，1~5分，乘10保存，避免小数
-     */
-    private Integer score;
-
-    /**
-     * 营业时间，例如 10:00-22:00
-     */
-    private String openHours;
-
-    /**
-     * 库存
-     */
-    @TableField(exist = false)
-    private Integer stock;
 
     /**
      * 创建时间
@@ -90,6 +83,5 @@ public class Goods implements Serializable {
     private LocalDateTime updateTime;
 
 
-    @TableField(exist = false)
-    private Double distance;
+
 }
