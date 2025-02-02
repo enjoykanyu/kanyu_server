@@ -121,6 +121,8 @@ public class LoginServiceImpl extends ServiceImpl<UserMapper, User> implements L
             return Result.fail(CODE_NOT_MATCH,CODE_NOT_MATCH_OCDE);
         }
         User user = query().eq("phone", loginForm.getPhone()).one();
+        log.info("user");
+        log.info(user.toString());
         if (user==null){
             //返回用户不存在 这里预期进入注册网页
             return Result.fail(USER_NOT_FOUND,USER_NOT_FOUNT_CODE);
@@ -130,10 +132,18 @@ public class LoginServiceImpl extends ServiceImpl<UserMapper, User> implements L
         String token = UUID.randomUUID().toString(true);
         // 将User对象转为HashMap存储
         LoginForm loginForm1 = BeanUtil.copyProperties(user, LoginForm.class);
+        log.info("loginForm1");
+        log.info(loginForm1.toString());
+        loginForm1.setCode("");//把null置为""空字符串类型
+        //这里之前报错空指针由于 User转成BeanUtil.copyProperties(user, LoginForm.class);User中无code字段 LoginForm有code字段 所有copy过来 code=null 执行BeanUtil.beanToMap报错了
         Map<String, Object> userMap = BeanUtil.beanToMap(loginForm1, new HashMap<>(),
-                CopyOptions.create().setIgnoreNullValue(true));
+                CopyOptions.create()
+                        .setIgnoreNullValue(true)
+                        .setFieldValueEditor((fieldName, fieldValue) -> fieldValue.toString()));
+
         // 存储
         String tokenKey = LOGIN_USER_KEY + token;
+        log.info(userMap.toString());
         stringRedisTemplate.opsForHash().putAll(tokenKey, userMap);
         //设置token有效期
         stringRedisTemplate.expire(tokenKey, LOGIN_USER_TTL, TimeUnit.MINUTES);

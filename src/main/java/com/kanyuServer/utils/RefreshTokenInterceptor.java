@@ -3,6 +3,7 @@ package com.kanyuServer.utils;
 import cn.hutool.core.bean.BeanUtil;
 import cn.hutool.core.util.StrUtil;
 import com.kanyuServer.entity.User;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.web.servlet.HandlerInterceptor;
 
@@ -13,7 +14,7 @@ import java.util.concurrent.TimeUnit;
 
 import static com.kanyuServer.constant.RedisConstants.LOGIN_USER_KEY;
 import static com.kanyuServer.constant.RedisConstants.LOGIN_USER_TTL;
-
+@Slf4j
 public class RefreshTokenInterceptor implements HandlerInterceptor {
 
     private StringRedisTemplate stringRedisTemplate;
@@ -24,6 +25,7 @@ public class RefreshTokenInterceptor implements HandlerInterceptor {
 
     @Override
     public boolean preHandle(HttpServletRequest request, HttpServletResponse response, Object handler) throws Exception {
+        log.info("进入拦截器");
         // 1.获取请求头中的token
         String token = request.getHeader("authorization");
         if (StrUtil.isBlank(token)) {
@@ -37,9 +39,10 @@ public class RefreshTokenInterceptor implements HandlerInterceptor {
             return true;
         }
         // 5.将查询到的hash数据转为UserDTO
-        User userDTO = BeanUtil.fillBeanWithMap(userMap, new User(), false);
+        User user = BeanUtil.fillBeanWithMap(userMap, new User(), false);
         // 6.存在，保存用户信息到 ThreadLocal
-        UserHolder.saveUser(userDTO);
+        UserHolder.saveUser(user);
+        log.info(UserHolder.getUser().toString());
         // 7.刷新token有效期
         stringRedisTemplate.expire(key, LOGIN_USER_TTL, TimeUnit.MINUTES);
         // 8.放行

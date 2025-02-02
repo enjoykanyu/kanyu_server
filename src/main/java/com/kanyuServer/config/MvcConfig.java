@@ -25,7 +25,8 @@ public class MvcConfig implements WebMvcConfigurer {
                         "/goods/**",
                         "/file/**",
                         "/register/**",
-                        "/admin/audit/**"
+                        "/admin/audit/**",
+                        "/order/**"
                 ).order(1);//设置规则优先级
         // token刷新的拦截器
         registry.addInterceptor(new RefreshTokenInterceptor(stringRedisTemplate)).addPathPatterns("/**").order(0);

@@ -21,37 +21,5 @@ import javax.annotation.Resource;
 @Service
 public class AdminGoodsAuditServiceImpl extends ServiceImpl<AdminGoodsAuditMapper, Goods> implements AdminGoodsAuditService {
 
-    @Resource
-    StringRedisTemplate stringRedisTemplate;
-    @Autowired
-    private RabbitTemplate rabbitTemplate;
 
-    @Override
-    public Result insertGoods(Goods goods){
-        save(goods);
-        //写入redis 使用string结构
-        stringRedisTemplate.opsForValue().set("cache:"+goods.getId()+"key", JSONUtil.toJsonStr(goods));
-        //发送消息通知审核系统 审核系统来处理，包括新建审核
-        // 发送消息
-        rabbitTemplate.convertAndSend("goods.direct","goods.audit",JSONUtil.toJsonStr(goods));
-        return Result.ok(goods);
-    }
-
-    //修改商铺操作
-    @Override
-    @Transactional//这里指的是删除缓存有异常可以把数据库回滚 单纯redis无法回滚
-    public Result updateGoods(Goods goods) {
-        log.info("进入updateGoods"+goods);
-        //1，更新数据库
-        Long id = goods.getId();
-        if (id == null){
-            log.info("null"+goods);
-            return Result.fail("商品信息为空",400);
-        }
-        boolean flag = update().eq("id",id).update(goods);
-        log.info("updateGoods"+goods);
-        //2，删除缓存
-        stringRedisTemplate.delete("cache:"+id+"key");
-        return Result.ok();
-    }
 }

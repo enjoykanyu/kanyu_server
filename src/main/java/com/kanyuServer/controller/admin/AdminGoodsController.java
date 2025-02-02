@@ -44,7 +44,7 @@ public class AdminGoodsController {
     AdminGoodsService adminGoodsService;
 
     /**
-     * 增加商品
+     * 上架商品
      * @param goods 商品
      * @return 商品详情页
      */
