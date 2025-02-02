@@ -73,6 +73,16 @@ public class Goods implements Serializable {
 
 
     /**
+     * 商品状态 0新建审核中 1审核通过 2审核拒绝
+     */
+    private Integer status;
+
+    /**
+     * 商品拒绝理由
+     */
+    private String rejectReason;
+
+    /**
      * 创建时间
      */
     private LocalDateTime createTime;

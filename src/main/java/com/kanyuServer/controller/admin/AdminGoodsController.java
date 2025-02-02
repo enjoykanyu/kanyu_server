@@ -23,6 +23,8 @@ import com.kanyuServer.service.AdminGoodsService;
 import com.kanyuServer.service.LoginService;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.ibatis.jdbc.Null;
+import org.springframework.amqp.rabbit.core.RabbitTemplate;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.*;
 
@@ -51,6 +53,20 @@ public class AdminGoodsController {
         return adminGoodsService.insertGoods(goods);
     }
 
+
+
+    @Autowired
+    private RabbitTemplate rabbitTemplate;
+    @PostMapping("/test")
+    public void testSimpleQueue() {
+        // 队列名称
+        String queueName = "queue_test";
+        // 消息
+        String message = "hello, spring amqp!";
+        String exchange = "exchange_test";
+        // 发送消息
+        rabbitTemplate.convertAndSend(exchange,"pay.test",message);
+    }
 
     /**
      * 管理员删除商品

@@ -17,6 +17,8 @@
 package com.kanyuServer.controller;
 
 import com.kanyuServer.common.Result;
+import com.kanyuServer.entity.Goods;
+import com.kanyuServer.service.AdminGoodsService;
 import com.kanyuServer.service.LoginService;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.web.bind.annotation.*;
@@ -24,26 +26,26 @@ import org.springframework.web.bind.annotation.*;
 import javax.annotation.Resource;
 import javax.servlet.http.HttpSession;
 
-;
+;import java.util.List;
 
 /**
  * @author 文件资源控制器
  */
 @Slf4j
 @RestController
-@RequestMapping("/admin")
+@RequestMapping("/goods")
+@CrossOrigin(origins = "http://localhost:5177")
 public class GoodsController {
 
     //商品所有资源列表
     @Resource
-    LoginService loginService;
+    AdminGoodsService adminGoodsService;
 
     @GetMapping("list")
-    public Result sendCode(@RequestParam("phone") String phone, HttpSession session) {
+    public Result sendCode(HttpSession session) {
         //打印日志
-        log.info("前端请求手机"+phone);
-        Result result = loginService.sendCode(phone,session);
-        return result;
+        List<Goods> list = adminGoodsService.query().list();
+        return Result.ok(list);
     }
 
     /**
@@ -53,7 +55,8 @@ public class GoodsController {
      */
     @GetMapping("/{goodId}")
     public Result queryVoucherOfShop(@PathVariable("goodId") Long goodId) {
-        return null;
+        Goods goods = adminGoodsService.query().eq("id", goodId).one();
+        return Result.ok(goods);
     }
 
 
