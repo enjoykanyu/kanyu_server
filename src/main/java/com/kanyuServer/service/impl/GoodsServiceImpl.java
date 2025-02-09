@@ -8,10 +8,12 @@ import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.kanyuServer.common.Result;
 import com.kanyuServer.entity.Goods;
 import com.kanyuServer.entity.Order;
+import com.kanyuServer.entity.User;
 import com.kanyuServer.mapper.GoodsMapper;
 import com.kanyuServer.service.GoodsService;
 import com.kanyuServer.service.OrderService;
 import com.kanyuServer.utils.RedisData;
+import com.kanyuServer.utils.UserHolder;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.amqp.rabbit.core.RabbitTemplate;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -50,6 +52,8 @@ public class GoodsServiceImpl extends ServiceImpl<GoodsMapper, Goods> implements
 
     @Override
     public Result insertGoods(Goods goods){
+        User user = UserHolder.getUser();
+        goods.setUserId(user.getId());
         save(goods);
         //写入redis 使用string结构
         stringRedisTemplate.opsForValue().set("cache:"+goods.getId()+"key", JSONUtil.toJsonStr(goods));

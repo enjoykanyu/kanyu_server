@@ -37,6 +37,16 @@ public class Goods implements Serializable {
     private String resource;
 
     /**
+     * 封面介绍url
+     */
+    private String coverImg;
+
+    /**
+     * 资源介绍url
+     */
+    private String IntroduceImg;
+
+    /**
      * 资源商品文件描述
      */
     private String content;

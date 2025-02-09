@@ -23,7 +23,6 @@ import javax.servlet.http.HttpSession;
 @Slf4j
 @RestController
 @RequestMapping("/goods")
-@CrossOrigin(origins = "http://localhost:5177")
 public class GoodsController {
 
     //商品所有资源列表
