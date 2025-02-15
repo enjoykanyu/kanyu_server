@@ -35,7 +35,7 @@ mybatis-plus:
   type-aliases-package: com.hmdp.entity # 别名扫描包
 logging:
   level:
-    com.hmdp: debug
+    com.kanyuServer: debug
   pattern:
     dateformat: mm:ss.SSS
 

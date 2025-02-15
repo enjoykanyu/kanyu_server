@@ -57,6 +57,11 @@ public class GoodsServiceImpl extends ServiceImpl<GoodsMapper, Goods> implements
         save(goods);
         //写入redis 使用string结构
         stringRedisTemplate.opsForValue().set("cache:"+goods.getId()+"key", JSONUtil.toJsonStr(goods));
+        try {//这里独立出一个方法用于审核通过之后，用户上架商品，再给商品增加缓存 使用逻辑过期时间存储
+            this.saveGood2redis(goods.getId(),20L);
+        } catch (InterruptedException e) {
+            e.printStackTrace();
+        }
         //发送消息通知审核系统 审核系统来处理，包括新建审核
         // 发送消息
         rabbitTemplate.convertAndSend("goods.direct","goods.audit",JSONUtil.toJsonStr(goods));
@@ -87,8 +92,10 @@ public class GoodsServiceImpl extends ServiceImpl<GoodsMapper, Goods> implements
         String cache_key = CACHE_GOODS_KEY+goodId;
         //查询redis是否存在商铺信息
         String goods_json = stringRedisTemplate.opsForValue().get(cache_key);
+        log.info(goods_json);
         //查询到了数据 看是否逻辑过期  但是返回的数据为json格式的 需返回成对象形式
         if (!StrUtil.isBlank(goods_json)){
+            log.info("111");
             //解决缓存击穿问题
             Goods goods = queryWithLogicExpire(goods_json, goodId);
             return Result.ok(goods);
@@ -121,8 +128,11 @@ public class GoodsServiceImpl extends ServiceImpl<GoodsMapper, Goods> implements
         JSONObject goods_json = (JSONObject) redisData.getData();
         Goods goods_result = JSONUtil.toBean(goods_json, Goods.class);
         LocalDateTime expireTime = redisData.getExpireTime();
+        log.info(expireTime+"");
+        log.info(LocalDateTime.now()+"");
         //判断是否过期 当前时间与redis的逻辑过期时间对比
-        if (expireTime.isAfter(LocalDateTime.now())){
+        if (expireTime != null && expireTime.isAfter(LocalDateTime.now())){
+            log.info("未过期，直接返回redis数据");
             //未过期，直接返回店铺信息
             return goods_result;
         }
@@ -143,7 +153,7 @@ public class GoodsServiceImpl extends ServiceImpl<GoodsMapper, Goods> implements
             //6。3 成功拿到互斥锁，进行缓存重建
             CACHE_REBUILD_EXECUTOR.submit(() ->{
                 try {
-                    this.saveGood2redis(goodId,20L);
+                    this.saveGood2redis(goodId,1L);
 
                 }catch (Exception e){
                     throw new RuntimeException(e);
@@ -172,7 +182,7 @@ public class GoodsServiceImpl extends ServiceImpl<GoodsMapper, Goods> implements
     }
 
     //缓存重建
-    public void saveGood2redis(Long id,Long expireSeconds) throws InterruptedException {
+    public void saveGood2redis(Long id,Long expireHours) throws InterruptedException {
         //1,查询商品数据
         Goods goods = getById(id);
         //模拟缓存重建耗时
@@ -181,7 +191,7 @@ public class GoodsServiceImpl extends ServiceImpl<GoodsMapper, Goods> implements
         RedisData redisData = new RedisData();
         redisData.setData(goods);
         //expireSeconds传入当前时间多少秒之后过期
-        redisData.setExpireTime(LocalDateTime.now().plusSeconds(expireSeconds));
+        redisData.setExpireTime(LocalDateTime.now().plusHours(expireHours));
         //3,写入redis 使用string结构
         stringRedisTemplate.opsForValue().set(CACHE_GOODS_KEY+id,JSONUtil.toJsonStr(redisData));
     }
