@@ -7,4 +7,7 @@ import com.kanyuServer.entity.Order;
 
 public interface OrderService extends IService<Order> {
 
+    Result orderCreate(Long goodsId);
+
+    Result queryByOrderID(String orderId);
 }

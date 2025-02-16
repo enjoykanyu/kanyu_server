@@ -1,9 +1,7 @@
 package com.kanyuServer.controller;
 
 import com.kanyuServer.common.Result;
-import com.kanyuServer.entity.Goods;
-import com.kanyuServer.entity.User;
-import com.kanyuServer.service.AdminGoodsService;
+import com.kanyuServer.service.OrderService;
 import com.kanyuServer.utils.UserHolder;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.web.bind.annotation.*;
@@ -20,7 +18,28 @@ import java.util.List;
 @Slf4j
 @RestController
 @RequestMapping("/order")
-@CrossOrigin(origins = "http://localhost:5177")
 public class OrderController {
+    @Resource
+    OrderService orderService;
+    /**
+     * 创建新订单
+     * @param goodsId 虚拟商品信息
+     * @return 订单信息
+     */
+    @PostMapping("create/{goodsId}")
+    public Result createOrder(@PathVariable("goodsId") Long goodsId) {
+        Result result = orderService.orderCreate(goodsId);
+        return Result.ok(result);
+    }
 
+    /**
+     * 查询订单信息
+     * @param orderId 订单id
+     * @return 订单信息
+     */
+    @PostMapping("{orderId}")
+    public Result addCoupon(@PathVariable("orderId") String orderId) {
+        Result result = orderService.queryByOrderID(orderId);
+        return Result.ok(result);
+    }
 }

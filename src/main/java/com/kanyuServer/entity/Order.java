@@ -24,6 +24,11 @@ public class Order implements Serializable {
     @TableId(value = "id", type = IdType.INPUT)
     private Long id;
 
+
+    /**
+     * 唯一订单id
+     */
+    private String orderId;
     /**
      * 关联下单用户id
      */
