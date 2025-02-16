@@ -55,6 +55,15 @@ public class Order implements Serializable {
      */
     private LocalDateTime payTime;
 
+    /**
+     * 原价
+     */
+    private Long originalPrice;
+
+    /**
+     * 实际支付价格
+     */
+    private Long actualPrice;
 
     /**
      * 退款时间

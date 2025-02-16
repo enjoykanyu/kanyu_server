@@ -37,8 +37,8 @@ public class OrderController {
      * @param orderId 订单id
      * @return 订单信息
      */
-    @PostMapping("{orderId}")
-    public Result addCoupon(@PathVariable("orderId") String orderId) {
+    @PostMapping("query")
+    public Result addCoupon(@RequestParam("orderId") String orderId) {
         Result result = orderService.queryByOrderID(orderId);
         return Result.ok(result);
     }
