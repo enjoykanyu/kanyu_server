@@ -10,4 +10,9 @@ public interface OrderService extends IService<Order> {
     Result orderCreate(Long goodsId);
 
     Result queryByOrderID(String orderId);
+
+
+    Result deleteOrder(String orderId);
+
+    Result payOrder(String orderId);
 }

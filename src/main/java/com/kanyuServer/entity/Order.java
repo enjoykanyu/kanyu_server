@@ -75,5 +75,9 @@ public class Order implements Serializable {
      */
     private LocalDateTime updateTime;
 
+    /**
+     * 过期时间
+     */
+    private LocalDateTime expireTime;
 
 }

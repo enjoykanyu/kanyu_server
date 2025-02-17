@@ -10,10 +10,13 @@ import com.kanyuServer.service.GoodsService;
 import com.kanyuServer.service.OrderService;
 import com.kanyuServer.utils.UserHolder;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
 
 import javax.annotation.Resource;
+import java.time.LocalDateTime;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.UUID;
 
@@ -44,6 +47,8 @@ public class OrderServiceImpl extends ServiceImpl<OrderMapper, Order> implements
         order.setOrderId(uuid);
         order.setOriginalPrice(price);
         order.setActualPrice(price);
+        //6，设置订单超时过期时间，过期未支付则自动取消订单，这里采用定时任务来实现
+        order.setExpireTime(LocalDateTime.now().plusMinutes(30L));
         save(order);
 
         return Result.ok(order);
@@ -65,5 +70,31 @@ public class OrderServiceImpl extends ServiceImpl<OrderMapper, Order> implements
         result.put("order",order);
         result.put("goods",goods);
         return Result.ok(result);
+    }
+
+    @Override
+    //手动取消订单
+    public Result deleteOrder(String orderId) {
+        boolean flag = update().eq("order_id", orderId).setSql("status = 4").update();
+        return Result.ok(flag);
+    }
+
+    @Override
+    public Result payOrder(String orderId) {
+        return null;
+    }
+
+    //定时任务自动取消过期订单
+    @Scheduled(fixedRate = 60000)
+    public void cancelOrderAuto() {
+        //找出所有未支付的订单
+        List<Order> orders = query().eq("status", 1).list();
+        for (Order order:orders) {
+            //已过期
+            if (order.getExpireTime().isBefore(LocalDateTime.now())){
+                //取消改订单
+                update().eq("id",order.getId()).setSql("status = 4").update();
+            }
+        }
     }
 }
