@@ -37,16 +37,10 @@ public class Coupon implements Serializable {
     private String title;
 
 
-
     /**
-     * 满付金额
+     * 优惠券折扣力度 90则打9折 85则打85折 单位%
      */
-    private Long spendValue;
-
-    /**
-     * 抵扣金额
-     */
-    private Long discountValue;
+    private Integer discount;
 
 
     /**

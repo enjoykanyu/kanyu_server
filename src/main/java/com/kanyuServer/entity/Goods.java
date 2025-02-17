@@ -29,7 +29,10 @@ public class Goods implements Serializable {
      */
     private Long userId;
 
-
+    /**
+     * 关联优惠券id
+     */
+    private Long couponId;
 
     /**
      * 资源文件url
