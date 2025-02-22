@@ -2,18 +2,16 @@ package com.kanyuServer.service.impl;
 
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.kanyuServer.common.Result;
-import com.kanyuServer.entity.Goods;
-import com.kanyuServer.entity.Order;
-import com.kanyuServer.entity.User;
+import com.kanyuServer.entity.*;
 import com.kanyuServer.mapper.OrderMapper;
-import com.kanyuServer.service.GoodsService;
-import com.kanyuServer.service.OrderService;
+import com.kanyuServer.service.*;
 import com.kanyuServer.utils.UserHolder;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
 
 import javax.annotation.Resource;
+import java.math.BigDecimal;
 import java.time.LocalDateTime;
 import java.util.HashMap;
 import java.util.List;
@@ -26,6 +24,16 @@ public class OrderServiceImpl extends ServiceImpl<OrderMapper, Order> implements
 
     @Resource
     GoodsService goodsService;
+    @Resource
+    UserWalletService userWalletService;
+    @Resource
+    CouponOrderService couponOrderService;
+    @Resource
+    PointsService pointsService;
+    @Resource
+    EarningService earningService;
+    @Resource
+    PayService payService;
     @Override
     public Result orderCreate(Long goodsId) {
         //1，拿到当前下单用户信息
@@ -40,17 +48,28 @@ public class OrderServiceImpl extends ServiceImpl<OrderMapper, Order> implements
         }
         //4,订单关联支付金额
         Long price = goods.getPrice();
-        //5,创建唯一订单id
+        //5，看当前用户是否有优惠券
+        Coupon coupon = couponOrderService.queryCouponByGoods(goodsId);
+        //6，计算抵扣金额
+        BigDecimal discount = new BigDecimal(0);
+        if (coupon == null){
+            discount = new BigDecimal(price);
+        }else {
+            //实际支付金额=原价*抵扣的力度比例
+            discount = new BigDecimal(price *coupon.getDiscount()/100);
+            order.setCouponId(coupon.getId());
+        }
+        //7,创建唯一订单id
         String uuid = UUID.randomUUID().toString();
         order.setGoodsId(goodsId);
         order.setUserId(user.getId());
         order.setOrderId(uuid);
-        order.setOriginalPrice(price);
-        order.setActualPrice(price);
-        //6，设置订单超时过期时间，过期未支付则自动取消订单，这里采用定时任务来实现
+        order.setOriginalPrice(new BigDecimal(price));
+        //实际支付金额
+        order.setActualPrice(discount);
+        //8，设置订单超时过期时间，过期未支付则自动取消订单，这里采用定时任务来实现
         order.setExpireTime(LocalDateTime.now().plusMinutes(30L));
         save(order);
-
         return Result.ok(order);
     }
 
@@ -64,7 +83,7 @@ public class OrderServiceImpl extends ServiceImpl<OrderMapper, Order> implements
         Goods goods = goodsService.query().eq("id", order.getGoodsId()).one();
         log.info(order.toString());
         if (order == null){
-            return Result.fail("当前用户未找到改订单",400);
+            return Result.fail("当前用户未找到该订单",400);
         }
         Map<String,Object> result = new HashMap<>();
         result.put("order",order);
