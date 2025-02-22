@@ -6,11 +6,14 @@ import com.kanyuServer.entity.Coupon;
 import com.kanyuServer.entity.CouponOrder;
 import com.kanyuServer.entity.Goods;
 import com.kanyuServer.mapper.CouponMapper;
+import com.kanyuServer.mapper.CouponOrderMapper;
+import com.kanyuServer.service.CouponOrderService;
 import com.kanyuServer.service.CouponService;
 import com.kanyuServer.service.GoodsService;
 import com.kanyuServer.utils.UserHolder;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import javax.annotation.Resource;
 import java.time.LocalDateTime;
@@ -18,25 +21,19 @@ import java.util.UUID;
 
 @Slf4j
 @Service
-public class CouponServiceImpl extends ServiceImpl<CouponMapper, Coupon> implements CouponService {
+public class CouponOrderServiceImpl extends ServiceImpl<CouponOrderMapper, CouponOrder> implements CouponOrderService {
 
     @Resource
-    GoodsService goodsService;
-    @Override
-    public Result bindCoupon(Long goodsId, Long couponId) {
-
-        Goods goods = goodsService.query().eq("id", goodsId).one();
-        goods.setCouponId(couponId);
-        return null;
-    }
+    CouponService couponService;
 
     /*
     * 优惠券抢购
     * */
     @Override
-    public Result orderCoupon(Long goodsId, Long couponId) {
+    @Transactional//多线程操作会有库存但下单报错的情况
+    public Result orderCoupon(Long couponId) {
         //1，查看优惠券是否存在
-        Coupon coupon = query().eq("id", couponId).one();
+        Coupon coupon = couponService.getById(couponId);
         if (coupon==null){
             return Result.fail("优惠券不存在",400);
         }
@@ -53,7 +50,7 @@ public class CouponServiceImpl extends ServiceImpl<CouponMapper, Coupon> impleme
             return Result.fail("优惠券已抢购空了",400);
         }
         //5，库存扣减且使用乐观锁判断库存与当前库存是否相等
-        boolean success = update().setSql("stock =stock-1").eq("id", couponId).eq("stock", coupon.getStock()).update();
+        boolean success = couponService.update().setSql("stock =stock-1").eq("id", couponId).eq("stock", coupon.getStock()).update();
 
         if (!success){
             return Result.fail("优惠券已抢购空了",400);
@@ -64,7 +61,35 @@ public class CouponServiceImpl extends ServiceImpl<CouponMapper, Coupon> impleme
         //创建唯一订单id
         String uuid = UUID.randomUUID().toString();
         couponOrder.setOrderId(uuid);
+        //订单关联优惠券
+        couponOrder.setCouponId(couponId);
+        save(couponOrder);
+        return Result.ok(couponOrder);
+    }
 
-        return null;
+    @Override
+    public Coupon queryCouponByGoods(Long goodsId) {
+        //查询商品关联的优惠券id
+        Coupon coupon = couponService.query().eq("goods_id", goodsId).one();
+
+        //商品未关联优惠券
+        if (coupon==null){
+            return null;
+        }
+        //查询优惠券订单
+        CouponOrder couponOrder = query().eq("coupon_id", coupon.getId()).one();
+        if (couponOrder == null){
+            return null;
+        }
+        if (couponOrder.getStatus()== 2){
+            return null;
+        }
+        return coupon;
+    }
+
+    @Override
+    public Boolean updateStatus(String orderId, Integer status) {
+        boolean isUpdate = update().eq("order_id", orderId).setSql("status = " + status).update();
+        return isUpdate;
     }
 }
