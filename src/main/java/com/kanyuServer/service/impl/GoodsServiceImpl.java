@@ -118,6 +118,30 @@ public class GoodsServiceImpl extends ServiceImpl<GoodsMapper, Goods> implements
         return Result.ok(good_result);
     }
 
+    @Override
+    public void likeGoods(Long goodsId) {
+        Long userId = UserHolder.getUser().getId();
+
+        String key = "goods_like"+goodsId;
+        Double score = stringRedisTemplate.opsForZSet().score(key, userId.toString());
+        if (score == null){
+            //redis增加用户存储id
+            stringRedisTemplate.opsForZSet().add(key, userId.toString(), System.currentTimeMillis());
+        }else {
+            //redis剔除用户存储id
+            stringRedisTemplate.opsForZSet().remove(key, userId.toString());
+        }
+        Long size = stringRedisTemplate.opsForZSet().size(key);
+
+    }
+
+    @Override
+    public Long likeCount(Long goodsId) {
+        String key = "goods_like"+goodsId;
+        Long size = stringRedisTemplate.opsForZSet().size(key);
+        return size;
+    }
+
     //定义线程池
     private static final ExecutorService CACHE_REBUILD_EXECUTOR = Executors.newFixedThreadPool(10);
 

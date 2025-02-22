@@ -3,13 +3,9 @@ package com.kanyuServer.controller;
 import com.kanyuServer.common.Result;
 import com.kanyuServer.entity.Goods;
 import com.kanyuServer.entity.User;
-import com.kanyuServer.service.AdminGoodsService;
 import com.kanyuServer.service.GoodsService;
-import com.kanyuServer.service.LoginService;
 import com.kanyuServer.utils.UserHolder;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.amqp.rabbit.core.RabbitTemplate;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
 
 import javax.annotation.Resource;
@@ -18,7 +14,7 @@ import javax.servlet.http.HttpSession;
 ;import java.util.List;
 
 /**
- * 文件资源控制器
+ * 商品控制器
  */
 @Slf4j
 @RestController
@@ -94,5 +90,29 @@ public class GoodsController {
         //写入数据库
         goodsService.updateGoods(goods);
         return Result.ok();
+    }
+    /**
+     * 用户点赞商品
+     * @param goodsId 商品id
+     * @return 商品点赞量
+     */
+    @PostMapping("goods/like/{goodsId}")
+    public Result likeGoods(@PathVariable("goodsId") Long goodsId) {
+        log.info("商品id"+goodsId);
+        //点赞
+        goodsService.likeGoods(goodsId);
+        return Result.ok();
+    }
+
+    /**
+     * 用户看点赞数量
+     * @param goodsId 商品id
+     * @return 商品点赞量
+     */
+    @PostMapping("likes/{goodsId}")
+    public Long likeCount(@PathVariable("goodsId") Long goodsId) {
+        log.info("商品id"+goodsId);
+        //返回商品的点赞数量
+        return goodsService.likeCount(goodsId);
     }
 }

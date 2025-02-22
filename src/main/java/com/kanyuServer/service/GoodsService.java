@@ -12,4 +12,8 @@ public interface GoodsService extends IService<Goods> {
     Result updateGoods(Goods goods);
 
     Result queryGoodById(Long goodId);
+
+    void likeGoods(Long goodsId);
+
+    Long likeCount(Long goodsId);
 }
