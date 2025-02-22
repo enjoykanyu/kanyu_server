@@ -49,13 +49,18 @@ public class CouponOrderServiceImpl extends ServiceImpl<CouponOrderMapper, Coupo
         if (coupon.getStock()<1){
             return Result.fail("优惠券已抢购空了",400);
         }
-        //5，库存扣减且使用乐观锁判断库存与当前库存是否相等
+        //5,判断当前用户是否下过单
+        int count = query().eq("user_id", UserHolder.getUser().getId()).count();
+        if (count>0){
+            return Result.fail("用户已创建过订单，失败",1000001);
+        }
+        //6，库存扣减且使用乐观锁判断库存与当前库存是否相等
         boolean success = couponService.update().setSql("stock =stock-1").eq("id", couponId).eq("stock", coupon.getStock()).update();
 
         if (!success){
             return Result.fail("优惠券已抢购空了",400);
         }
-        //6，创建优惠券订单
+        //7，创建优惠券订单
         CouponOrder couponOrder = new CouponOrder();
         couponOrder.setUserId(UserHolder.getUser().getId());
         //创建唯一订单id
