@@ -45,7 +45,7 @@ public class UserWallet implements Serializable {
     /**
      * 用户钱包金额
      */
-    private BigDecimal balance;
+    private Long balance;
 
     /**
      * 更新时间
@@ -53,4 +53,8 @@ public class UserWallet implements Serializable {
     private LocalDateTime updateTime;
 
 
+    /**
+     * 支付密码
+     */
+    private String password;
 }

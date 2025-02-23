@@ -1,17 +1,24 @@
 package com.kanyuServer.service.impl;
 
+import cn.hutool.json.JSONUtil;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.kanyuServer.common.Result;
 import com.kanyuServer.entity.Coupon;
 import com.kanyuServer.entity.CouponOrder;
 import com.kanyuServer.entity.Goods;
+import com.kanyuServer.entity.Order;
 import com.kanyuServer.mapper.CouponMapper;
 import com.kanyuServer.mapper.CouponOrderMapper;
 import com.kanyuServer.service.CouponOrderService;
 import com.kanyuServer.service.CouponService;
 import com.kanyuServer.service.GoodsService;
 import com.kanyuServer.utils.UserHolder;
+import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.amqp.rabbit.annotation.Exchange;
+import org.springframework.amqp.rabbit.annotation.Queue;
+import org.springframework.amqp.rabbit.annotation.QueueBinding;
+import org.springframework.amqp.rabbit.annotation.RabbitListener;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -21,6 +28,7 @@ import java.util.UUID;
 
 @Slf4j
 @Service
+@RequiredArgsConstructor
 public class CouponOrderServiceImpl extends ServiceImpl<CouponOrderMapper, CouponOrder> implements CouponOrderService {
 
     @Resource
@@ -92,6 +100,17 @@ public class CouponOrderServiceImpl extends ServiceImpl<CouponOrderMapper, Coupo
         return coupon;
     }
 
+
+    @RabbitListener(bindings = @QueueBinding(
+            value = @Queue(name = "goods.coupon.order", durable = "true"),
+            exchange = @Exchange(name = "goods.order"),
+            key = "goods.order.pay"
+    ))
+    public void listenPaySuccessForupdateStatus(String order){
+        System.out.println(order);
+        Order order_value = JSONUtil.toBean(order, Order.class);
+        updateStatus(order_value.getOrderId(),2);
+    }
     @Override
     public Boolean updateStatus(String orderId, Integer status) {
         boolean isUpdate = update().eq("order_id", orderId).setSql("status = " + status).update();

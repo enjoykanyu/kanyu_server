@@ -7,7 +7,7 @@ import java.math.BigDecimal;
 
 public interface UserWalletService extends IService<UserWallet> {
 
-    BigDecimal queryByUserId(Long userId);
+    Long queryByUserId(Long userId);
 
-    BigDecimal updateBalance(Long userId,BigDecimal updatePrice,Integer type);
+    Long updateBalance(Long userId,Long updatePrice,Integer type);
 }

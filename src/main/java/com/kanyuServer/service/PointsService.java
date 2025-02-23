@@ -6,7 +6,7 @@ import com.kanyuServer.entity.Points;
 
 public interface PointsService extends IService<Points> {
 
-    Result updatePoints(Long userId,Integer points,Integer status);
+    Result updatePoints(Long userId,Long points);
 
     Result queryPoints(Long userId);
 

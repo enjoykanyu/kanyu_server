@@ -1,6 +1,7 @@
 package com.kanyuServer.entity;
 
 import com.baomidou.mybatisplus.annotation.IdType;
+import com.baomidou.mybatisplus.annotation.TableField;
 import com.baomidou.mybatisplus.annotation.TableId;
 import com.baomidou.mybatisplus.annotation.TableName;
 import lombok.Data;
@@ -25,10 +26,6 @@ public class Pay implements Serializable {
     @TableId(value = "id", type = IdType.AUTO)
     private Long id;
 
-    /**
-     * 支付密码
-     */
-    private String password;
 
     /**
      * 关联订单id
@@ -45,7 +42,7 @@ public class Pay implements Serializable {
     /**
      * 支付时间
      */
-    private LocalDateTime createTime;
+    private LocalDateTime payTime;
 
 
 
@@ -61,5 +58,10 @@ public class Pay implements Serializable {
      */
     private LocalDateTime updateTime;
 
+    /**
+     * 前端支付给的密码
+     */
+    @TableField(exist = false)
+    private String  password;
 
 }

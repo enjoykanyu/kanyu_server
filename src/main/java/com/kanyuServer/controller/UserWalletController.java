@@ -28,7 +28,7 @@ public class UserWalletController {
      */
     @GetMapping("/query")
     public Result payOrder(@RequestParam("userId") Long userId) {
-        BigDecimal result = userWalletService.queryByUserId(userId);
+        Long result = userWalletService.queryByUserId(userId);
         return Result.ok(result);
     }
 
@@ -38,8 +38,8 @@ public class UserWalletController {
      * @return 用户金额
      */
     @GetMapping("/update")
-    public Result updateBalance(@RequestParam("userId") Long userId,@RequestParam("updatePrice")BigDecimal updatePrice,@RequestParam("type")Integer type) {
-        BigDecimal result = userWalletService.updateBalance(userId,updatePrice,type);
+    public Result updateBalance(@RequestParam("userId") Long userId,@RequestParam("updatePrice")Long updatePrice,@RequestParam("type")Integer type) {
+        Long result = userWalletService.updateBalance(userId,updatePrice,type);
         return Result.ok(result);
     }
 }

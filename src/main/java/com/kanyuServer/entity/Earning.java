@@ -49,7 +49,7 @@ public class Earning implements Serializable {
     /**
      * 收益金额
      */
-    private BigDecimal RevenueAmount;
+    private Long RevenueAmount;
 
     /**
      * 收益状态 0 待结算 1 已结算 2 已退款
