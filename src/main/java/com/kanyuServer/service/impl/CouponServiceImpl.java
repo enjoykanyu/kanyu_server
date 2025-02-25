@@ -10,6 +10,7 @@ import com.kanyuServer.service.CouponService;
 import com.kanyuServer.service.GoodsService;
 import com.kanyuServer.utils.UserHolder;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.stereotype.Service;
 
 import javax.annotation.Resource;
@@ -22,6 +23,8 @@ public class CouponServiceImpl extends ServiceImpl<CouponMapper, Coupon> impleme
 
     @Resource
     GoodsService goodsService;
+    @Resource
+    StringRedisTemplate stringRedisTemplate;
     @Override
     public Result bindCoupon(Long goodsId, Long couponId) {
 
@@ -66,5 +69,13 @@ public class CouponServiceImpl extends ServiceImpl<CouponMapper, Coupon> impleme
         couponOrder.setOrderId(uuid);
 
         return null;
+    }
+
+    public Result addCoupon(Coupon coupon){
+        // 保存抢购优惠券
+        save(coupon);
+        // Redis
+        stringRedisTemplate.opsForValue().set("coupon:stock:" + coupon.getId(), coupon.getStock().toString());
+        return Result.ok();
     }
 }
