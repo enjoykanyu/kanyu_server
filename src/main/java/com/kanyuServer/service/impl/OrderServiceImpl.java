@@ -103,6 +103,16 @@ public class OrderServiceImpl extends ServiceImpl<OrderMapper, Order> implements
         return null;
     }
 
+
+    @RabbitListener(bindings = @QueueBinding(
+            value = @Queue(name = "goods.order", durable = "true"),
+            exchange = @Exchange(name = "goods.order"),
+            key = "goods.order.pay"
+    ))
+    public void listenPaySuccessForOrderStatusUpdate(String order){
+        Order order_value = JSONUtil.toBean(order, Order.class);
+        updateStatus(2,order_value.getOrderId());
+    }
     //定时任务自动取消过期订单
     @Scheduled(fixedRate = 60000)
     public void cancelOrderAuto() {
