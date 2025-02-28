@@ -21,11 +21,14 @@ import org.springframework.amqp.rabbit.annotation.Exchange;
 import org.springframework.amqp.rabbit.annotation.Queue;
 import org.springframework.amqp.rabbit.annotation.QueueBinding;
 import org.springframework.amqp.rabbit.annotation.RabbitListener;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.context.annotation.Bean;
 import org.springframework.core.io.ClassPathResource;
 import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.data.redis.core.script.DefaultRedisScript;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.transaction.interceptor.TransactionAspectSupport;
 
 import javax.annotation.Resource;
 import java.time.LocalDateTime;
@@ -48,21 +51,10 @@ public class CouponOrderServiceImpl extends ServiceImpl<CouponOrderMapper, Coupo
     /*
     * 优惠券抢购
     * */
-    @Override
-    @Transactional//多线程操作会有库存但下单报错的情况
-    public Result orderCoupon(Long couponId) {
-        //1,判断当前用户是否下过单
-        Long userId = UserHolder.getUser().getId();
-        // 创建锁对象
-        RLock redisLock = redissonClient.getLock("lock:order:" + userId);
-        // 尝试获取锁
-        boolean isLock = redisLock.tryLock();
-        // 判断
-        if(!isLock){
-            // 获取锁失败，直接返回失败或者重试
-            return Result.fail("不允许重复下单！",10000001);
-        }
+    @Transactional(rollbackFor = Exception.class) // 强制所有异常回滚 多线程操作会有库存但下单报错的情况
+    public Result transactionalOrderCoupon(Long couponId,Long userId){
         try {
+            // 业务逻辑
             //1，查看优惠券是否存在
             Coupon coupon = couponService.getById(couponId);
             if (coupon==null){
@@ -101,7 +93,30 @@ public class CouponOrderServiceImpl extends ServiceImpl<CouponOrderMapper, Coupo
             couponOrder.setCouponId(couponId);
             save(couponOrder);
             return Result.ok(couponOrder);
-        }finally {
+        } catch (Exception e) {
+            TransactionAspectSupport.currentTransactionStatus().setRollbackOnly(); // 手动回滚
+            throw e;
+        }
+
+    }
+
+    @Override
+    public Result orderCoupon(Long couponId) {
+        //1,判断当前用户是否下过单
+        Long userId = UserHolder.getUser().getId();
+        // 创建锁对象
+        RLock redisLock = redissonClient.getLock("lock:order:" + userId);
+        // 尝试获取锁
+        boolean isLock = redisLock.tryLock();
+        // 判断
+        if(!isLock){
+            // 获取锁失败，直接返回失败或者重试
+            return Result.fail("不允许重复下单！",10000001);
+        }
+        try {
+            // 执行业务逻辑（此处可调用事务方法）
+            return transactionalOrderCoupon(couponId,userId);
+        } finally {
             redisLock.unlock();
         }
     }
