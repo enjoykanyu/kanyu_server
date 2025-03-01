@@ -1,12 +1,18 @@
 package com.kanyuServer.service.impl;
 
+import cn.hutool.json.JSONUtil;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.kanyuServer.common.Result;
 import com.kanyuServer.entity.*;
 import com.kanyuServer.mapper.OrderMapper;
 import com.kanyuServer.service.*;
 import com.kanyuServer.utils.UserHolder;
+import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.amqp.rabbit.annotation.Exchange;
+import org.springframework.amqp.rabbit.annotation.Queue;
+import org.springframework.amqp.rabbit.annotation.QueueBinding;
+import org.springframework.amqp.rabbit.annotation.RabbitListener;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
 
@@ -20,6 +26,7 @@ import java.util.UUID;
 
 @Slf4j
 @Service
+@RequiredArgsConstructor
 public class OrderServiceImpl extends ServiceImpl<OrderMapper, Order> implements OrderService {
 
     @Resource
@@ -51,12 +58,12 @@ public class OrderServiceImpl extends ServiceImpl<OrderMapper, Order> implements
         //5，看当前用户是否有优惠券
         Coupon coupon = couponOrderService.queryCouponByGoods(goodsId);
         //6，计算抵扣金额
-        BigDecimal discount = new BigDecimal(0);
+        Long discount = 0L;
         if (coupon == null){
-            discount = new BigDecimal(price);
+            discount = price;
         }else {
             //实际支付金额=原价*抵扣的力度比例
-            discount = new BigDecimal(price *coupon.getDiscount()/100);
+            discount = price *coupon.getDiscount()/100;
             order.setCouponId(coupon.getId());
         }
         //7,创建唯一订单id
@@ -64,7 +71,7 @@ public class OrderServiceImpl extends ServiceImpl<OrderMapper, Order> implements
         order.setGoodsId(goodsId);
         order.setUserId(user.getId());
         order.setOrderId(uuid);
-        order.setOriginalPrice(new BigDecimal(price));
+        order.setOriginalPrice(price);
         //实际支付金额
         order.setActualPrice(discount);
         //8，设置订单超时过期时间，过期未支付则自动取消订单，这里采用定时任务来实现
