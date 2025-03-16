@@ -26,6 +26,7 @@ import org.springframework.context.annotation.Bean;
 import org.springframework.core.io.ClassPathResource;
 import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.data.redis.core.script.DefaultRedisScript;
+import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.transaction.interceptor.TransactionAspectSupport;
@@ -33,6 +34,7 @@ import org.springframework.transaction.interceptor.TransactionAspectSupport;
 import javax.annotation.Resource;
 import java.time.LocalDateTime;
 import java.util.Collections;
+import java.util.List;
 import java.util.UUID;
 
 @Slf4j
@@ -100,6 +102,19 @@ public class CouponOrderServiceImpl extends ServiceImpl<CouponOrderMapper, Coupo
 
     }
 
+    //定时任务自动取消过期优惠券订单
+    @Scheduled(fixedRate = 60000)
+    public void cancelOrderAuto() {
+        //找出所有未使用的订单
+        List<CouponOrder> couponOrderList = query().eq("status", 1).list();
+        for (CouponOrder couponOrder:couponOrderList) {
+            //已过期
+            if (couponOrder.getExpireTime().isBefore(LocalDateTime.now())){
+                //优惠券改成过期状态
+                update().eq("id",couponOrder.getId()).setSql("status = 3").update();
+            }
+        }
+    }
     @Override
     public Result orderCoupon(Long couponId) {
         //1,判断当前用户是否下过单
@@ -131,7 +146,7 @@ public class CouponOrderServiceImpl extends ServiceImpl<CouponOrderMapper, Coupo
             return null;
         }
         //查询优惠券订单
-        CouponOrder couponOrder = query().eq("coupon_id", coupon.getId()).one();
+        CouponOrder couponOrder = query().eq("coupon_id", coupon.getId()).eq("status",1).one();
         if (couponOrder == null){
             return null;
         }
