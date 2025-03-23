@@ -122,7 +122,13 @@ public class CouponOrderServiceImpl extends ServiceImpl<CouponOrderMapper, Coupo
         // 创建锁对象
         RLock redisLock = redissonClient.getLock("lock:order:" + userId);
         // 尝试获取锁
-        boolean isLock = redisLock.tryLock();
+        boolean isLock;
+        try {
+            isLock = redisLock.tryLock(10, java.util.concurrent.TimeUnit.SECONDS);
+        } catch (InterruptedException e) {
+            Thread.currentThread().interrupt(); // Restore interrupted status
+            return Result.fail("获取锁失败", 500);
+        }
         // 判断
         if(!isLock){
             // 获取锁失败，直接返回失败或者重试
